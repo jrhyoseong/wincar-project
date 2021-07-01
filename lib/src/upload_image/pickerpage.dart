@@ -15,103 +15,35 @@ class PickerPage extends StatefulWidget {
 
 class _PickerPageState extends State<PickerPage> {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    //분류 리스트 호출 결과
     String apiResult;
-
+    List jsonResult = [];
+    String classTy = '';
 
     String orderCd = Get.arguments['orderCd'];
     String userCd = Get.arguments['userCd'];
     String cmpnyCd = Get.arguments['cmpnyCd'];
     String accessToken = Get.arguments['accessToken'];
-    List jsonResult = [];
-    String classTy = '';
 
 
+    //사진 파일 절대 위치
+    List<String> paths = <String>[];
 
+    //분류 리스트
+    List<String> selectList = <String>[];
 
+    //선택된 사진 리스트
+    List<Asset> resultList = <Asset>[];
+    List<Asset> images = <Asset>[];
 
+    //dropdownValue 초기화
+    String dropdownValue = "미분류";
 
+    //폴더 명 입력
+    final _folderNameTextEditController = TextEditingController();
 
-
-
-    // 사진 분류 리스트 api 함
-  // 결과 값으로 List<Classfication> list 로 값을 받기로 함.
-  // 받은 값 들 중에 필요한 classTyNm을 사용 하여 각 분류에 넣기로 함.
-  // 선택한 이름에 값은 연결 ... ?
-  Future<void> fetchClassfication() async {
-
-    final response = await http.post(
-      Uri.parse('http://15.165.55.102/mobileapi/v1/user/order/photocategrs?userCd=$userCd&cmpnyCd=$cmpnyCd'),
-      headers : {'accessToken' : '$accessToken'},
-    );
-
-    if(response.statusCode == 200){
-
-      String result = utf8.decode(response.bodyBytes);
-
-      jsonResult = jsonDecode(result)['dataset']['data'];
-
-      //print("jsonResult.toString() 의 값은 "+ jsonResult.toString());
-
-      String classTyNm = "";
-
-      for(int i = 0; i < jsonResult.length; i++){
-        classTyNm = jsonResult[i]['classTyNm'];
-
-        selectList.add(classTyNm);
-      }
-
-      setState(() {
-        // 이곳을 통해서 결과 값들을 전달해야 함.
-        apiResult = utf8.decode(response.bodyBytes);
-      });
-
-    }else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load Classfication of Picture');
-    }
-
-  }
-
-
-
-
-
-
-
-
-
-
-  List<Asset> images = <Asset>[];
-
-  List<String> paths = <String>[];
-
-  //분류 리스트
-  List<String> selectList = <String>[];
-
-  //선택된 사진 리스트
-  List<Asset> resultList = <Asset>[];
-
-
-
-
-  String dropdownValue = "미분류";
-  final _folderNameTextEditController = TextEditingController();
-
-  Future<void> loadAssets() async {
+    //업로드할 이미지 선택 함수
+    Future<void> loadAssets() async {
 
     try {
       resultList = await MultiImagePicker.pickImages(
@@ -144,6 +76,95 @@ class _PickerPageState extends State<PickerPage> {
     });
   }
 
+    // 사진 분류 리스트 api 호출
+    // 받은 값 들 중에 필요한 classTyNm을 사용하여 각 분류에 넣기로 함.
+    Future<void> fetchClassfication() async {
+
+      final response = await http.post(
+        Uri.parse('http://15.165.55.102/mobileapi/v1/user/order/photocategrs?userCd=$userCd&cmpnyCd=$cmpnyCd'),
+        headers : {'accessToken' : '$accessToken'},
+      );
+
+      if(response.statusCode == 200){
+
+        String result = utf8.decode(response.bodyBytes);
+
+        jsonResult = jsonDecode(result)['dataset']['data'];
+
+        String classTyNm = "";
+
+        for(int i = 0; i < jsonResult.length; i++){
+          classTyNm = jsonResult[i]['classTyNm'];
+
+          selectList.add(classTyNm);
+        }
+
+        setState(() {
+          // 이곳을 통해서 결과 값들을 전달해야 함.
+          apiResult = utf8.decode(response.bodyBytes);
+        });
+
+      }else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to load Classfication of Picture');
+      }
+
+    }
+
+    //이미지 업로드 함수
+    Future<void> uploadImage() async {
+      //make paths
+      String path = "";
+      paths = [];
+      for (int i = 0; i < resultList.length; i++) {
+        //절대 경로 값을 받습니다.
+        path = await FlutterAbsolutePath.getAbsolutePath(resultList[i].identifier);
+
+        /*print(resultList[i].identifier);
+      print(resultList[i].name);*/
+
+        paths.add(path);
+      }
+
+      //폴더 값이 null 일 때 현재 시간을 폴더 명으로 한다.
+      if(_folderNameTextEditController.text == null || _folderNameTextEditController.text == "" ){
+        DateTime dateTime = DateTime.now(); // your dateTime object
+        DateFormat dateFormat = DateFormat("yyyyMMdd"); // how you want it to be formatted
+        _folderNameTextEditController.text  = dateFormat.format(dateTime);
+
+        /*print('now date is ' + _folderNameTextEditController.text);*/
+      }
+
+      // dropdownValue 값에 해당하는 classTy의 값을 받아서 값을 전달한다.
+      for(int i = 0; i < selectList.length; i++){
+        if(selectList[i] == dropdownValue){
+          classTy = jsonResult[i]['classTy'];
+        }
+      }
+
+      server.imageUpload(
+          paths: paths,
+          classTy: classTy,
+          foldername: _folderNameTextEditController.text,
+          orderCd: orderCd,
+          userCd: userCd,
+          cmpnyCd: cmpnyCd,
+          accessToken: accessToken
+      );
+
+      Get.back();
+
+      /*test*/
+      /*server.test(paths: paths,
+        classTy: dropdownValue,
+        foldername: _folderNameTextEditController.text,
+        orderCd: orderCd,
+        userCd: userCd,
+        cmpnyCd: cmpnyCd,
+        accessToken: accessToken);*/
+    }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -155,6 +176,7 @@ class _PickerPageState extends State<PickerPage> {
     //분류리스트
     fetchClassfication();
 
+    //서버 통신 확인
     server.getHttp();
   }
 
@@ -164,6 +186,7 @@ class _PickerPageState extends State<PickerPage> {
     super.dispose();
   }
 
+  //이미지 그리드
   Widget buildGridView() {
     return GridView.count(
       crossAxisCount: 3,
@@ -180,57 +203,6 @@ class _PickerPageState extends State<PickerPage> {
         );
       }),
     );
-  }
-
-  Future<void> uploadImage() async {
-    //make paths
-    String path = "";
-    paths = [];
-    for (int i = 0; i < resultList.length; i++) {
-      //절대 경로 값을 받습니다.
-      path = await FlutterAbsolutePath.getAbsolutePath(resultList[i].identifier);
-
-      print(resultList[i].identifier);
-      print(resultList[i].name);
-
-      paths.add(path);
-    }
-
-    //폴더 값이 null 일 때 현재 시간을 폴더 명으로 한다.
-    if(_folderNameTextEditController.text == null || _folderNameTextEditController.text == "" ){
-      DateTime dateTime = DateTime.now(); // your dateTime object
-      DateFormat dateFormat = DateFormat("yyyyMMdd"); // how you want it to be formatted
-      _folderNameTextEditController.text  = dateFormat.format(dateTime);
-      print('now date is ' + _folderNameTextEditController.text);
-    }
-
-    // dropdownValue 값에 해당하는 classTy의 값을 받아서 값을 전달한다.
-    for(int i = 0; i < selectList.length; i++){
-      if(selectList[i] == dropdownValue){
-        classTy = jsonResult[i]['classTy'];
-      }
-    }
-
-    server.imageUpload(
-        paths: paths,
-        classTy: classTy,
-        foldername: _folderNameTextEditController.text,
-        orderCd: orderCd,
-        userCd: userCd,
-        cmpnyCd: cmpnyCd,
-        accessToken: accessToken
-    );
-
-    Get.back();
-
-    /*test*/
-    /*server.test(paths: paths,
-        classTy: dropdownValue,
-        foldername: _folderNameTextEditController.text,
-        orderCd: orderCd,
-        userCd: userCd,
-        cmpnyCd: cmpnyCd,
-        accessToken: accessToken);*/
   }
 
   @override
@@ -353,7 +325,6 @@ class _PickerPageState extends State<PickerPage> {
                                 child: Text("전송"),
                               ),
                             ),
-
                         ],
                       ),
                     ),

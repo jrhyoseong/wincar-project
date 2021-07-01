@@ -39,12 +39,10 @@ class Server {
   }) async {
 
     var options = BaseOptions(
-      //mobileapi/v1/user/order/{orderCd}/photos/create
       baseUrl: 'http://15.165.55.102',
       connectTimeout: 5000,
       receiveTimeout: 3000,
     );
-
 
     Dio dio = Dio(options);
 
@@ -58,7 +56,6 @@ class Server {
       'orderCd': orderCd,
       'classTy': classTy,
       'subClassNm': foldername,
-      //'uploadPhoto': fileList,
       'accessToken':accessToken
     });
 
@@ -77,30 +74,24 @@ class Server {
       fileList.add( await MultipartFile.fromFileSync(paths[i],
           filename: paths[i].split('/').last));
 
-      //uploadPhotos['uploadPhoto${i}'] = await MultipartFile.fromFileSync(paths[i], filename: paths[i].split('/').last);
-
       formData.files.add(MapEntry('uploadPhoto${i}', await MultipartFile.fromFileSync(paths[i], filename: paths[i].split('/').last)));
 
       print("imagename ${i} 번: " + paths[i].split("/").last);
 
     } //for문
 
-    print('@@@ fileList @@@ : ' + fileList.toString());
+    /*print('@@@ fileList @@@ : ' + fileList.toString());
     print('paths @@ ' + paths.toString());
     print('classTy @@ ' + classTy);
     print('foldername @@ ' + foldername);
     print('orderCd @@ ' + orderCd);
     print('userCd @@ ' + userCd);
     print('cmpnyCd @@ ' + cmpnyCd);
-    print('accessToken @@ ' + accessToken);
-
+    print('accessToken @@ ' + accessToken);*/
 
     response = await dio.post('/mobileapi/v1/user/order/$orderCd/photos/create', data: formData);
 
-
-    print('@@@ image upload 결과 @@@ : ' + response.statusCode.toString());
-    print('@@@ image upload 결과 @@@ : ' + response.statusMessage);
-    print(response.toString());
+    /*print(response.toString());*/
 
   }
 

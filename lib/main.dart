@@ -6,10 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:wincar_demo/src/pages/camerapage.dart';
-import 'package:wincar_demo/src/pages/checkpage.dart';
-import 'package:wincar_demo/src/pages/pickerpage.dart';
-import 'package:wincar_demo/src/pages/webviewpage.dart';
+import 'package:wincar_demo/src/camera/camerapage.dart';
+import 'package:wincar_demo/src/camera/checkpage.dart';
+import 'package:wincar_demo/src/upload_image/pickerpage.dart';
+import 'package:wincar_demo/src/webviewpage.dart';
 
 Future main() async{
   WidgetsFlutterBinding.ensureInitialized();
