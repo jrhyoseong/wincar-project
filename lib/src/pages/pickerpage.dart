@@ -221,7 +221,7 @@ class _PickerPageState extends State<PickerPage> {
         accessToken: accessToken
     );
 
-    // Get.back();
+    Get.back();
 
     /*test*/
     /*server.test(paths: paths,

@@ -43,7 +43,6 @@ class Server {
       baseUrl: 'http://15.165.55.102',
       connectTimeout: 5000,
       receiveTimeout: 3000,
-      headers: {'accessToken':'$accessToken'}
     );
 
 
@@ -51,6 +50,17 @@ class Server {
 
     List<MultipartFile> fileList = <MultipartFile>[];
 
+    Map uploadPhotos = new Map();
+
+    var formData = FormData.fromMap({
+      'userCd': userCd,
+      'cmpnyCd':cmpnyCd,
+      'orderCd': orderCd,
+      'classTy': classTy,
+      'subClassNm': foldername,
+      //'uploadPhoto': fileList,
+      'accessToken':accessToken
+    });
 
     /*
     * check data
@@ -67,27 +77,15 @@ class Server {
       fileList.add( await MultipartFile.fromFileSync(paths[i],
           filename: paths[i].split('/').last));
 
-      print("imagename : " + paths[i].split("/").last);
-    }
+      //uploadPhotos['uploadPhoto${i}'] = await MultipartFile.fromFileSync(paths[i], filename: paths[i].split('/').last);
+
+      formData.files.add(MapEntry('uploadPhoto${i}', await MultipartFile.fromFileSync(paths[i], filename: paths[i].split('/').last)));
+
+      print("imagename ${i} 번: " + paths[i].split("/").last);
+
+    } //for문
 
     print('@@@ fileList @@@ : ' + fileList.toString());
-
-    /*
-    * userCd : 사용자 코드
-      cmpnyCd : 기업코드
-      orderCd : 주문코드
-    *
-    * */
-
-    var formData = FormData.fromMap({
-      'userCd': userCd,
-      'cmpnyCd':cmpnyCd,
-      'orderCd': orderCd,
-      'classTy': classTy,
-      'subClassNm': foldername,
-      'uploadPhoto': fileList
-    });
-
     print('paths @@ ' + paths.toString());
     print('classTy @@ ' + classTy);
     print('foldername @@ ' + foldername);
@@ -101,6 +99,9 @@ class Server {
 
 
     print('@@@ image upload 결과 @@@ : ' + response.statusCode.toString());
+    print('@@@ image upload 결과 @@@ : ' + response.statusMessage);
+    print(response.toString());
+
   }
 
   /*
@@ -124,11 +125,6 @@ class Server {
     print('accessToken @@ ' + accessToken);
 
     }
-
-
-
-
-
 
   }
 Server server = Server();
